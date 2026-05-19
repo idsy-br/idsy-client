@@ -2,7 +2,7 @@
 
 include_once "../vendor/autoload.php";
 
-use Idsy\Client\Financeiro\PixSincronizar;
+use Idsy\Client\Toth\AcervoSincronizar;
 use Idsy\Client\Control\Login;
 
 // login
@@ -17,7 +17,7 @@ $login->get();
 $data = json_decode($login->request->getResult(), true);
 $token = $data['result'];
 
-$call = new PixSincronizar();
+$call = new AcervoSincronizar();
 $call->request->setURL('http://localhost:8080/idsy-api/public_html/index.php');
 $call->post($token);
 

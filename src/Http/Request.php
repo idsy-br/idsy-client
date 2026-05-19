@@ -110,13 +110,13 @@ class Request
     {
         $headers = $this->getHeaders();
 
-        foreach ($headers as $h) {
-            if (preg_match("/:\s*$/", $h)) {
-                throw new \Exception("Header inválido: [$h]");
-            }
-        }
+        // foreach ($headers as $h) {
+        //     if (preg_match("/:\s*$/", $h)) {
+        //         throw new \Exception("Header inválido: [$h]");
+        //     }
+        // }
 
-        $query = $this->publicData !== '' ? '?' . $this->publicData : '';
+        $query = $this->publicData !== '' ? '?publicdata=' . urlencode($this->publicData) : '';
 
         $ch = curl_init();
 
@@ -130,14 +130,12 @@ class Request
         ]);
 
         $response = curl_exec($ch);
-        $error    = curl_error($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if ($error !== '') {
-            throw new \Exception($error);
+        if ($response === false) {
+            throw new \Exception(curl_error($ch));
         }
 
         $this->result     = $response;
-        $this->resultCode = $httpCode;
+        $this->resultCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     }
 }
