@@ -14,6 +14,7 @@ class Request
     private string $authenticationDataType;
     private string $result;
     private int $resultCode;
+    private int $timeout;
 
     public function __construct()
     {
@@ -33,6 +34,7 @@ class Request
         $this->authenticationDataType = '';
         $this->result                 = '';
         $this->resultCode             = 0;
+        $this->timeout                = 30;
     }
 
     public function getURL(): string                        { return $this->url; }
@@ -68,6 +70,9 @@ class Request
     public function getResultCode(): int                    { return $this->resultCode; }
     public function setResultCode(int $value): void         { $this->resultCode = $value; }
 
+    public function getTimeout(): int                       { return $this->timeout; }
+    public function setTimeout(int $value): void            { $this->timeout = $value; }
+
     private function getHeaders(): array
     {
         return [
@@ -91,7 +96,7 @@ class Request
             CURLOPT_POST           => true,
             CURLOPT_HTTPHEADER     => array_merge($this->getHeaders(), ['Connection: close']),
             CURLOPT_POSTFIELDS     => $this->privateData,
-            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_TIMEOUT        => $this->timeout,
             CURLOPT_FORBID_REUSE   => true,
             CURLOPT_FRESH_CONNECT  => true,
         ]);
@@ -124,7 +129,7 @@ class Request
             CURLOPT_URL            => $this->url . $query,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER     => array_merge($headers, ['Connection: close']),
-            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_TIMEOUT        => $this->timeout,
             CURLOPT_FORBID_REUSE   => true,
             CURLOPT_FRESH_CONNECT  => true,
         ]);
