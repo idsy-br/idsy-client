@@ -3,7 +3,7 @@ namespace Idsy\Client\Toth;
 
 use Idsy\Client\Http\Request;
 
-class ArtistaPublic
+class ArtistaObraPublic
 {
     public Request $request;
     private int $id_artista;
