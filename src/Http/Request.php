@@ -73,9 +73,13 @@ class Request
     public function getTimeout(): int                       { return $this->timeout; }
     public function setTimeout(int $value): void            { $this->timeout = $value; }
 
-    private function getHeaders(): array
+    /**
+     * @param string $e_metodo 'post' ou 'get' -- entra na assinatura, porque assinatura de
+     *                         um GET inofensivo nao pode servir para um POST de exclusao.
+     */
+    private function getHeaders(string $e_metodo = 'post'): array
     {
-        return [
+        $v_headers = [
             'Accept: application/json',
             'controller: ' . $this->controller,
             'public-data-type: ' . $this->publicDataType,
@@ -84,6 +88,22 @@ class Request
             'authentication-data: ' . $this->authenticationData,
             'device: ' . $this->device,
         ];
+
+        /* Sem chave configurada, nada e assinado e a API aceita o token como token antigo.
+           Ver Assinatura::usarArquivo() para ligar. */
+        if (Assinatura::configurada() === true) {
+            $v_hora = time();
+            $v_texto = Assinatura::texto($this->controller, $e_metodo, $v_hora,
+                                         $this->publicData, $this->privateData);
+            $v_assinatura = Assinatura::assinar($v_texto);
+
+            if ($v_assinatura !== '') {
+                $v_headers[] = 'assinatura: ' . $v_assinatura;
+                $v_headers[] = 'assinatura-hora: ' . $v_hora;
+            }
+        }
+
+        return $v_headers;
     }
 
     public function post(): void
@@ -94,7 +114,7 @@ class Request
             CURLOPT_URL            => $this->url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
-            CURLOPT_HTTPHEADER     => array_merge($this->getHeaders(), ['Connection: close']),
+            CURLOPT_HTTPHEADER     => array_merge($this->getHeaders('post'), ['Connection: close']),
             CURLOPT_POSTFIELDS     => $this->privateData,
             CURLOPT_TIMEOUT        => $this->timeout,
             CURLOPT_FORBID_REUSE   => true,
@@ -113,7 +133,7 @@ class Request
 
     public function get(): void
     {
-        $headers = $this->getHeaders();
+        $headers = $this->getHeaders('get');
 
         // foreach ($headers as $h) {
         //     if (preg_match("/:\s*$/", $h)) {

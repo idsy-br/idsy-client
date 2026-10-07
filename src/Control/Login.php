@@ -66,18 +66,33 @@ class Login
 
     public function get(): void
     {
-        $authenticationData = [
-            'login'    => $this->login,
-            'password' => $this->password,
-            'team'     => $this->team,
-            'key'      => $this->key,
+        /* A credencial vai no CORPO, nao no header.
+
+           Header e a parte da requisicao que a infraestrutura registra sem pedir licenca:
+           LogFormat do Apache, proxy, CDN, dump de erro que despeja os headers. A senha
+           ficava ali. Corpo de requisicao nenhum desses guarda por padrao.
+
+           O header vai vazio de proposito. A API le o corpo primeiro e so cai no header
+           para atender cliente antigo, entao os dois formatos funcionam durante a troca.
+
+           Junto vai a chave PUBLICA, e e ela que amarra o token a esta instalacao: das
+           proximas chamadas em diante a API so aceita o token se a chamada vier assinada
+           pela privada do mesmo par. Sem chave configurada ela vai vazia e o token nasce
+           sem assinatura, como antes. */
+        $privateData = [
+            'login'         => $this->login,
+            'password'      => $this->password,
+            'team'          => $this->team,
+            'key'           => $this->key,
+            'chave_publica' => \Idsy\Client\Http\Assinatura::chavePublicaB64(),
         ];
 
         $this->request->setController('CONTROL_LOGIN');
         $this->request->setPublicDataType('json');
-        $this->request->setAuthenticationDataType('json');
-        $this->request->setAuthenticationData(json_encode($authenticationData));
+        $this->request->setAuthenticationDataType('text');
+        $this->request->setAuthenticationData('');
         $this->request->setPrivateDataType('json');
+        $this->request->setPrivateData(json_encode($privateData));
         $this->request->post();
     }
 }
